@@ -175,6 +175,9 @@ class QA_Setting():
 
 QASETTING = QA_Setting()
 # ########## by @kent119
+# Comment by @kent119: This is to isolate the financial data from the `user_list` collection.
+# Comment by @kent119: The db name can be set by adding 'db = dbname' under the 'MONGODB' section in the `config.ini`
+
 # DATABASE = QASETTING.client.quantaxis
 # DATABASE_ASYNC = QASETTING.client_async.quantaxis
 
