@@ -174,8 +174,13 @@ class QA_Setting():
 
 
 QASETTING = QA_Setting()
-DATABASE = QASETTING.client.quantaxis
-DATABASE_ASYNC = QASETTING.client_async.quantaxis
+# ########## by @kent119
+# DATABASE = QASETTING.client.quantaxis
+# DATABASE_ASYNC = QASETTING.client_async.quantaxis
+
+DATABASE = QASETTING.client[QASETTING.get_config(option='db', default_value='quantaxis')]
+DATABASE_ASYNC = QASETTING.client_async[QASETTING.get_config(option='db', default_value='quantaxis')]
+# ########## by @kent119
 
 
 def exclude_from_stock_ip_list(exclude_ip_list):
@@ -207,7 +212,6 @@ info_ip_list = [{'ip': '101.227.73.20', 'port': 7709}, {'ip': '101.227.77.254', 
                 {'ip': '218.75.126.9', 'port': 7709}, {
                     'ip': '221.231.141.60', 'port': 7709},
                 {'ip': '59.173.18.140', 'port': 7709}, {'ip': '60.12.136.250', 'port': 7709}]
-
 
 stock_ip_list = [
     {'ip': '61.152.107.168', 'port': 7721},
