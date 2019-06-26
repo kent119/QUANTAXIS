@@ -42,7 +42,10 @@ from functools import lru_cache, partial, reduce
 
 import numpy as np
 import pandas as pd
-from pyecharts import Kline
+try:
+  from pyecharts import Kline
+except:
+  from pyecharts.charts import Kline
 
 from QUANTAXIS.QAData.base_datastruct import _quotation_base
 from QUANTAXIS.QAData.data_fq import QA_data_stock_to_fq
@@ -132,13 +135,13 @@ class QA_DataStruct_Stock_day(_quotation_base):
     @lru_cache()
     def next_day_low_limit(self):
         "明日跌停价"
-        return round((self.data.close + 0.0002) * 0.9, 2)
+        return self.groupby(level=1).close.apply(lambda x: round((x + 0.0002)*0.9, 2)).sort_index()
 
     @property
     @lru_cache()
     def next_day_high_limit(self):
         "明日涨停价"
-        return round((self.data.close + 0.0002) * 1.1, 2)
+        return self.groupby(level=1).close.apply(lambda x: round((x + 0.0002)*1.1, 2)).sort_index()
 
     @property
     def preclose(self):
@@ -196,19 +199,13 @@ class QA_DataStruct_Stock_min(_quotation_base):
         try:
             if 'preclose' in DataFrame.columns:
                 self.data = DataFrame.loc[:, [
-                    'open', 'high', 'low', 'close', 'volume', 'amount', 'preclose']]
+                    'open', 'high', 'low', 'close', 'volume', 'amount', 'preclose', 'type']]
             else:
                 self.data = DataFrame.loc[:, [
-                    'open', 'high', 'low', 'close', 'volume', 'amount']]
+                    'open', 'high', 'low', 'close', 'volume', 'amount', 'type']]
         except Exception as e:
             raise e
 
-        if 'high_limit' not in self.data.columns:
-            self.data['high_limit'] = round(
-                (self.data.close.shift(1) + 0.0002) * 1.1, 2)
-        if 'low_limit' not in self.data.columns:
-            self.data['low_limit'] = round(
-                (self.data.close.shift(1) + 0.0002) * 0.9, 2)
         self.type = dtype
         self.if_fq = if_fq
 
@@ -258,15 +255,15 @@ class QA_DataStruct_Stock_min(_quotation_base):
                 'none support type for qfq Current type is:%s' % self.if_fq)
             return self
 
-    @property
-    def high_limit(self):
-        '涨停价'
-        return self.data.high_limit
+    # @property
+    # def high_limit(self):
+    #     '涨停价'
+    #     return self.data.high_limit
 
-    @property
-    def low_limit(self):
-        '跌停价'
-        return self.data.low_limit
+    # @property
+    # def low_limit(self):
+    #     '跌停价'
+    #     return self.data.low_limit
 
     def resample(self, level):
         try:
@@ -301,7 +298,7 @@ class QA_DataStruct_Future_day(_quotation_base):
         super().__init__(DataFrame, dtype, if_fq)
         self.type = 'future_day'
         self.data = self.data.loc[:, [
-            'open', 'high', 'low', 'close', 'trade', 'position', 'price']]
+            'open', 'high', 'low', 'close', 'volume', 'position', 'price']]
         self.if_fq = if_fq
 
     # 抽象类继承
@@ -327,6 +324,33 @@ class QA_DataStruct_Future_day(_quotation_base):
     def quarter(self):
         return self.resample('Q')
 
+    @property
+    @lru_cache()
+    def tradedate(self):
+        """返回交易所日历下的日期
+
+        Returns:
+            [type] -- [description]
+        """
+
+        try:
+            return self.date
+        except:
+            return None
+
+    @property
+    @lru_cache()
+    def tradetime(self):
+        """返回交易所日历下的日期
+
+        Returns:
+            [type] -- [description]
+        """
+
+        try:
+            return self.date
+        except:
+            return None
     # @property
     # @lru_cache()
     # def semiannual(self):
@@ -353,9 +377,9 @@ class QA_DataStruct_Future_min(_quotation_base):
     def __init__(self, DataFrame, dtype='future_min', if_fq=''):
         # 🛠todo  期货分钟数据线的维护， 暂时用日线代替分钟线
         super().__init__(DataFrame, dtype, if_fq)
-        self.type = 'future_day'
+        self.type = dtype
         self.data = self.data.loc[:, [
-            'open', 'high', 'low', 'close', 'trade', 'position', 'price', 'tradetime']]
+            'open', 'high', 'low', 'close', 'volume', 'position', 'price', 'tradetime', 'type']]
         self.if_fq = if_fq
 
     # 抽象类继承
@@ -364,7 +388,7 @@ class QA_DataStruct_Future_min(_quotation_base):
 
     @property
     @lru_cache()
-    def trade_date(self):
+    def tradedate(self):
         """返回交易所日历下的日期
 
         Returns:
@@ -372,7 +396,21 @@ class QA_DataStruct_Future_min(_quotation_base):
         """
 
         try:
-            return self.data.trade_date
+            return self.data.tradetime.apply(lambda x: x[0:10])
+        except:
+            return None
+
+    @property
+    @lru_cache()
+    def tradetime(self):
+        """返回交易所日历下的日期
+
+        Returns:
+            [type] -- [description]
+        """
+
+        try:
+            return self.data.tradetime
         except:
             return None
 
@@ -475,8 +513,8 @@ class QA_DataStruct_Index_min(_quotation_base):
         self.type = dtype
         self.if_fq = if_fq
         self.data = self.data.loc[:, [
-            'open', 'high', 'low', 'close', 'up_count', 'down_count', 'volume', 'amount']]
-        #self.mongo_coll = DATABASE.index_min
+            'open', 'high', 'low', 'close', 'up_count', 'down_count', 'volume', 'amount', 'type']]
+        # self.mongo_coll = DATABASE.index_min
 
     # 抽象类继承
     def choose_db(self):
@@ -603,7 +641,7 @@ class QA_DataStruct_Stock_transaction():
             lru_cache
 
         Returns:
-            pd.Series -- till minute level 
+            pd.Series -- till minute level
         """
 
         return self.data.time
@@ -730,7 +768,7 @@ class QA_DataStruct_Stock_transaction():
         return self.data.query('amount>={}'.format(bigamount))
 
     def get_medium_order(self, lower=200000, higher=1000000):
-        """return medium 
+        """return medium
 
         Keyword Arguments:
             lower {[type]} -- [description] (default: {200000})
@@ -759,6 +797,27 @@ class QA_DataStruct_Stock_transaction():
             return self.data.loc[start]
         else:
             return self.data.loc[start:end]
+
+
+class QA_DataStruct_Day(_quotation_base):
+    """这个类是个通用类 一般不使用  特定生成的时候可能会用到 只具备基类方法
+
+    Arguments:
+        _quotation_base {[type]} -- [description]
+    """
+
+    def __init__(self, data, dtype='unknown_day', if_fq='bfq'):
+        '''
+        '''
+        super().__init__(data, dtype, if_fq)
+
+
+class QA_DataStruct_Min(_quotation_base):
+    '''这个类是个通用类 一般不使用  特定生成的时候可能会用到 只具备基类方法
+    '''
+
+    def __init__(self, data, dtype='unknown_min', if_fq='bfq'):
+        super().__init__(data, dtype, if_fq)
 
 
 class _realtime_base():
@@ -903,9 +962,10 @@ class _realtime_base():
 class QA_DataStruct_Stock_realtime(_realtime_base):
     def __init__(self, data):
         self.data = data
+        self.index = data.index
 
     def __repr__(self):
-        return '< QA_REALTIME_STRUCT code {} start {} end {} >'.format(self.code.unique(), self.datetime.iloc[1], self.datetime.iloc[-1])
+        return '< QA_REALTIME_STRUCT >'
 
     # @property
     # def ask_list(self):
@@ -925,33 +985,26 @@ class QA_DataStruct_Stock_realtime(_realtime_base):
         return pd.DataFrame(self.data)
 
     @property
-    def ab_board(self):
-        """ask_bid board
-        bid3 bid_vol3
-        bid2 bid_vol2
-        bid1 bid_vol1
-        ===============
-        price /cur_vol
-        ===============
-        ask1 ask_vol1
-        ask2 ask_vol2
-        ask3 ask_vol3
-        """
-        return 'BID5 {}  {} \nBID4 {}  {} \nBID3 {}  {} \nBID2 {}  {} \nBID1 {}  {} \n============\nCURRENT {}  {} \n============\
-        \nASK1 {}  {} \nASK2 {}  {} \nASK3 {}  {} \nASK4 {}  {} \nASK5 {}  {} \nTIME {}  CODE {} '.format(
-            self.bid5, self.bid_vol5, self.bid4, self.bid_vol4, self.bid3, self.bid_vol3, self.bid2, self.bid_vol2, self.bid1, self.bid_vol1,
-            self.price, self.cur_vol,
-            self.ask1, self.ask_vol1, self.ask2, self.ask_vol2, self.ask3, self.ask_vol3, self.ask4, self.ask_vol4, self.ask5, self.ask_vol5,
-            self.datetime, self.code
-        )
+    def datetime(self):
+        return self.index.levels[0]
+
+    @property
+    def code(self):
+        return self.index.levels[1]
 
     def serialize(self):
         """to_protobuf
         """
         pass
 
+    def to_json(self):
+        return self.data.assign(code=self.code, datetime=str(self.datetime)).to_dict(orient='records')
+
     def resample(self, level):
         return QA_data_tick_resample(self.data, level)
+
+
+QA_DataStruct_Future_realtime = QA_DataStruct_Stock_realtime
 
 
 class QA_DataStruct_Stock_realtime_series():
@@ -986,3 +1039,64 @@ class QA_DataStruct_Security_list():
 
     def get_etf(self):
         return self.data
+
+
+class QA_DataStruct_Future_tick():
+    """
+    CTP FORMAT
+    {'TradingDay': '20181115',
+    'InstrumentID': 'rb1901',
+    'ExchangeID': '',
+    'ExchangeInstID': '',
+    'LastPrice': 3874.0,
+    'PreSettlementPrice': 3897.0,
+    'PreClosePrice': 3937.0,
+    'PreOpenInterest': 2429820.0,
+    'OpenPrice': 3941.0,
+    'HighestPrice': 3946.0,
+    'LowestPrice': 3865.0,
+    'Volume': 2286142,
+    'Turnover': 89450228460.0,
+    'OpenInterest': 2482106.0,
+    'ClosePrice': 1.7976931348623157e+308,
+    'SettlementPrice': 1.7976931348623157e+308,
+    'UpperLimitPrice': 4169.0,
+    'LowerLimitPrice': 3624.0,
+    'PreDelta': 0.0,
+    'CurrDelta': 1.7976931348623157e+308,
+    'BidPrice1': 3873.0,
+    'BidVolume1': 292,
+    'AskPrice1': 3874.0,
+    'AskVolume1': 223,
+    'BidPrice2': 1.7976931348623157e+308,
+    'BidVolume2': 0,
+    'AskPrice2': 1.7976931348623157e+308,
+    'AskVolume2': 0,
+    'BidPrice3': 1.7976931348623157e+308,
+    'BidVolume3': 0,
+    'AskPrice3': 1.7976931348623157e+308,
+    'AskVolume3': 0,
+    'BidPrice4': 1.7976931348623157e+308,
+    'BidVolume4': 0,
+    'AskPrice4': 1.7976931348623157e+308,
+    'AskVolume4': 0,
+    'BidPrice5': 1.7976931348623157e+308,
+    'BidVolume5': 0,
+    'AskPrice5': 1.7976931348623157e+308,
+    'AskVolume5': 0,
+    'AveragePrice': 39127.15328269198,
+    'ActionDay': '20181115'
+    'UpdateTime': '11:30:01',
+    'UpdateMillisec': 0,}
+
+    replace(1.7976931348623157e+308, np.nan)
+    """
+
+    def __init__(self, data={}):
+        self.data = data
+
+    def trading_day(self, ):
+        pass
+
+    def append(self, new_data):
+        pass
