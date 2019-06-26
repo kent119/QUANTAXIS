@@ -39,7 +39,6 @@ from QUANTAXIS.QAUtil import (QA_util_date_stamp, QA_util_log_info,
                               trade_date_sse)
 from QUANTAXIS.QAUtil.QASetting import DATABASE
 
-
 import tushare as QATs
 
 
@@ -90,7 +89,7 @@ def QA_SU_save_stock_terminated(client=DATABASE):
     # 这个函数已经失效
     print("！！！ tushare 这个函数已经失效！！！")
     df = QATs.get_terminated()
-    #df = QATs.get_suspended()
+    # df = QATs.get_suspended()
     print(" Get stock terminated from tushare,stock count is %d  (终止上市股票列表)" % len(df))
     coll = client.stock_terminated
     client.drop_collection(coll)
@@ -195,6 +194,7 @@ def QA_save_stock_day_with_fqfactor(client=DATABASE):
             __coll.insert_many(data_json)
         except:
             QA_util_log_info('error in saving ==== %s' % str(i))
+
     for i_ in range(len(df.index)):
         QA_util_log_info('The %s of Total %s' % (i_, len(df.index)))
         QA_util_log_info('DOWNLOAD PROGRESS %s ' % str(
@@ -222,17 +222,17 @@ def QA_save_lhb(client=DATABASE):
             pd = QA_fetch_get_lhb(start.isoformat())
             if pd is None:
                 continue
-            data = pd\
-                .assign(pchange=pd.pchange.apply(float))\
-                .assign(amount=pd.amount.apply(float))\
-                .assign(bratio=pd.bratio.apply(float))\
-                .assign(sratio=pd.sratio.apply(float))\
-                .assign(buy=pd.buy.apply(float))\
+            data = pd \
+                .assign(pchange=pd.pchange.apply(float)) \
+                .assign(amount=pd.amount.apply(float)) \
+                .assign(bratio=pd.bratio.apply(float)) \
+                .assign(sratio=pd.sratio.apply(float)) \
+                .assign(buy=pd.buy.apply(float)) \
                 .assign(sell=pd.sell.apply(float))
             # __coll.insert_many(QA_util_to_json_from_pandas(data))
             for i in range(0, len(data)):
                 __coll.update({"code": data.iloc[i]['code'], "date": data.iloc[i]['date']}, {
-                              "$set": QA_util_to_json_from_pandas(data)[i]}, upsert=True)
+                    "$set": QA_util_to_json_from_pandas(data)[i]}, upsert=True)
             time.sleep(2)
             if i % 10 == 0:
                 time.sleep(60)
@@ -240,6 +240,20 @@ def QA_save_lhb(client=DATABASE):
             print("error codes:")
             time.sleep(2)
             continue
+
+
+def QA_SU_save_hkstock_day_tushare(client=DATABASE):
+    # TODO
+    df = QATs.bar('{0:05d}'.format(int(stock_code)), conn=cons, freq='D', asset='X', start_date=start_date,
+                  end_date=end_date).drop('p_change', axis=1)
+
+    df = QATs.get_stock_basics()
+    print(" Get stock info from tushare,stock count is %d" % len(df))
+    coll = client.stock_info_tushare
+    client.drop_collection(coll)
+    json_data = json.loads(df.reset_index().to_json(orient='records'))
+    coll.insert(json_data)
+    print(" Save data to stock_info_tushare collection， OK")
 
 
 if __name__ == '__main__':

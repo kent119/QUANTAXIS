@@ -102,6 +102,7 @@ def QA_SU_save_future_list(engine, client=DATABASE):
     engine = select_save_engine(engine)
     engine.QA_SU_save_future_list(client=client)
 
+
 def QA_SU_save_future_day(engine, client=DATABASE):
     """save future_day
 
@@ -127,7 +128,6 @@ def QA_SU_save_future_min(engine, client=DATABASE):
 
     engine = select_save_engine(engine)
     engine.QA_SU_save_future_min(client=client)
-
 
 
 def QA_SU_save_stock_day(engine, client=DATABASE):
@@ -166,7 +166,6 @@ def QA_SU_save_option_day(engine, client=DATABASE):
     engine.QA_SU_save_option_day(client=client)
 
 
-
 def QA_SU_save_option_min(engine, client=DATABASE):
     '''
 
@@ -186,6 +185,7 @@ def QA_SU_save_option_commodity_min(engine, client=DATABASE):
     '''
     engine = select_save_engine(engine)
     engine.QA_SU_save_option_commodity_min(client=client)
+
 
 def QA_SU_save_option_commodity_day(engine, client=DATABASE):
     '''
@@ -306,7 +306,9 @@ def select_save_engine(engine):
     elif engine in ['tdx']:
         return stdx
     else:
-        print('QA Error QASU.main.py call select_save_engine with parameter %s is None of  thshare, ts, Thshare, or tdx', engine)
+        print(
+            'QA Error QASU.main.py call select_save_engine with parameter %s is None of  thshare, ts, Thshare, or tdx',
+            engine)
 
 
 def QA_SU_save_stock_min_5(file_dir, client=DATABASE):
@@ -337,7 +339,7 @@ def QA_SU_crawl_eastmoney(action="zjlx", stockCode=None):
     if stockCode == "all":
         # 读取tushare股票列表代码
         print("💪 一共需要获取 %d 个股票的 资金流向 , 需要大概 %d 小时" %
-              (len(stockItems), (len(stockItems)*5)/60/60))
+              (len(stockItems), (len(stockItems) * 5) / 60 / 60))
 
         code_list = []
         for stock in stockItems:
@@ -359,14 +361,31 @@ def QA_SU_crawl_eastmoney(action="zjlx", stockCode=None):
 def QA_SU_save_financialfiles():
     return save_financialfiles.QA_SU_save_financial_files()
 
+
 def QA_SU_save_report_calendar_day():
     return save_financial_calendar.QA_SU_save_report_calendar_day()
+
 
 def QA_SU_save_report_calendar_his():
     return save_financial_calendar.QA_SU_save_report_calendar_his()
 
+
 def QA_SU_save_stock_divyield_day():
     return save_stock_divyield.QA_SU_save_stock_divyield_day()
 
+
 def QA_SU_save_stock_divyield_his():
     return save_stock_divyield.QA_SU_save_stock_divyield_his()
+
+
+def QA_SU_save_hkstock_day_tushare(engine="tushare", client=DATABASE):
+    '''
+
+    :param engine: tushare
+    :param client:
+    :return: None
+    '''
+
+    # only support the tushare
+    engine = select_save_engine("tushare")
+    engine.QA_SU_save_hkstock_day_tushare()
