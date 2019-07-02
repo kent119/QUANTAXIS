@@ -3,6 +3,8 @@
 
 > 2019-04-26 update: 重大更新即将上线/ OMS/RMS/多场景无缝切换/CEP即将上线
 
+点击此处下载 QUANTAXIS2019 介绍性pdf [quantaxis 2019](http://whl.yutiansut.com/QUANTAXIS%202019.pdf)
+
 -------------------------------------------------------------
 
 Quantitative Financial FrameWork
@@ -87,6 +89,8 @@ QUANTAXIS量化金融策略框架,是一个面向中小型策略团队的量化�
 - [QUANTAXIS_QARISKPRO](https://github.com/yutiansut/QARISKPRO) QUANTAXIS 多市场多账户集成的实时风控系统
 - [QUANTAXIS QADESKPRO](https://github.com/yutiansut/qadeskpro) 新版本客户端网页(部分开源)
 - [QUANTAXIS_ATBROKER](https://github.com/QUANTAXIS/QA_AtBroker) 基于海风at的接口封装
+- [QUANTAXIS OTGBROKER](https://github.com/QUANTAXIS/QA_OTGBROKER) 基于OPEN_TRADE_GATEWAY的接口封装
+- [QUANTAXIS TRADER](https://github.com/yutiansut/QATrader) 一个开源的websocket版本的期货交易实例
 
 ### 社区提供的工具链
 
@@ -217,7 +221,7 @@ QUANTAXIS 2019 支持多市场的面向场景解决方案
 
 ### 1.6 实盘
 
-#### 1.6.1 (股票) 实盘易  QAShipaneBroker
+#### 1.6.1 (股票) 实盘易  QAShipaneBroker(推荐)
 
 
 实盘易插件 参见[实盘易](http://www.iguuu.com/e?x=18839)
@@ -234,14 +238,20 @@ CTP 的websocket交易 :  simnow demo:  ws://www.yutiansut.com:7988
 
 关于websocket交易(可能存在一些不确定的bug 因此暂时不开放):
 
-- 目前仅提供demo/ 模拟盘接入
-- 具体需要私聊我 yutiansut@qq.com
+目前已经开源 参见 [QAOTGBROKER](https://github.com/yutiansut/QAOTGBROKER)
 
-#### 1.6.4 (期货)  海风AT封装 QAAtBroker
+### 1.6.4 (期货) QATRADER(推荐)
+
+CTP 的websocket 封装 包括完整的账户/HTTP控制等
+
+目前已经开源 参见 [QATRADER](https://github.com/yutiansut/QATRADER)
+
+#### 1.6.5 (期货)  海风AT封装 QAAtBroker
+
 CTP 的海风broker魔改封装:  [QA_AtBroker](https://github.com/QUANTAXIS/QA_AtBroker)
 
 
-#### 1.6.5 (期货) VNPY QAVNPYBroker
+#### 1.6.6 (期货) VNPY QAVNPYBroker
 
 目前等VNPY 2.0的横空出世, 兼容py3.6/3.7后将进行对接
 
